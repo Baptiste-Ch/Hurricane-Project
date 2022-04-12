@@ -1,4 +1,4 @@
 # Hurricane-Project
 
-Projet in construction. 
+Project in construction. 
 Final scripts and documentation will come soon.
