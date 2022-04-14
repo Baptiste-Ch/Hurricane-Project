@@ -33,7 +33,10 @@ dew = nc.MFDataset(['E:/Data_hurrican/dewpoint_1.nc',
                        'E:/Data_hurrican/dewpoint_2.nc'], aggdim = 'time')
 t_surf = nc.MFDataset(['E:/Data_hurrican/temperature2m_1.nc', 
                        'E:/Data_hurrican/temperature2m_2.nc'], aggdim = 'time')
-
+uwind100 = nc.MFDataset(['E:/Data_hurrican/uwind100_1.nc', 
+                       'E:/Data_hurrican/uwind100_2.nc'], aggdim = 'time')
+vwind100 = nc.MFDataset(['E:/Data_hurrican/vwind100_1t.nc', 
+                       'E:/Data_hurrican/vwind100_2.nc'], aggdim = 'time')
 
 # ETABLISSEMENT EN DF DES COORDONNEES SPATIALES ET TEMPORELLES
     # Temps
@@ -66,8 +69,9 @@ df2 = df2[df2['nature'] == 1]                                      # sélection 
     # Les indexes temporels physiques sont associés avec les dates d'ouragans
 merge = time.merge(df2, left_on = 'time', right_on = 'date', how = 'inner')
 merge = merge.drop('date', 1)
+merge = merge[merge['name'] != 'NOT_2MED']
 merge = merge[merge['longitude'] > -100]
-
+merge = merge[merge['latitude'] < 41]
 
 
 # ADDITION DE DONNEES METEOROLOGIQUES ALEATOIRES
@@ -78,7 +82,7 @@ merge = merge[merge['longitude'] > -100]
 
 np.random.seed(0)   
 added_df = pd.DataFrame(data = None, columns=['index', 't', 'time','latitude', 'longitude']) # df vide
-for row in range(20000):                                           # Création de 20 000 lignes
+for row in range(10000):                                           # Création de 20 000 lignes
     new_lon = lon['longitude'].sample()                            # Echantillonnage aléatoire de longitude
     new_lat = lat['latitude'].sample()                             # Même chose pour la latitude
     new_index = pd.DataFrame(time['index'].sample())               # De même pour la date
@@ -100,6 +104,7 @@ full = full.reset_index(drop=True)
     
     # ATTENTION : Cette étape nécessite plusieurs heures de compilation
 
+
 inter_psurf = []
 inter_sst =   []
 inter_mslp =  []
@@ -109,9 +114,11 @@ inter_vwind = []
 inter_uwind = []
 inter_dew =   []
 inter_tsurf = []
+inter_vwind100 = []
+inter_uwind100 = []
 full_list = [inter_psurf, inter_sst, inter_mslp, inter_evap, inter_prcp, 
-             inter_vwind, inter_uwind, inter_dew, inter_tsurf]
-full_header = ['psurf', 'sst', 'mslp', 'evaporation', 'prcp', 'uwind', 'vwind', 'dewp', 'tsurf']
+             inter_vwind, inter_uwind, inter_dew, inter_tsurf, inter_uwind100, inter_vwind100]
+full_header = ['psurf', 'sst', 'mslp', 'evaporation', 'prcp', 'uwind', 'vwind', 'dewp', 'tsurf', 'uwind100', 'vwind100']
 
 
 for j in range(len(full)):
@@ -135,14 +142,21 @@ for j in range(len(full)):
     x_dew = dew.variables['d2m'][full.iloc[j,0], y['index'], z['index']]
     inter_dew.append(x_dew)
     x_tsurf = t_surf.variables['t2m'][full.iloc[j,0], y['index'], z['index']]
-    inter_tsurf.append(x_tsurf)   
+    inter_tsurf.append(x_tsurf)
+    x_uwind100 = uwind100.variables['u100'][full.iloc[j,0], y['index'], z['index']]
+    inter_uwind100.append(x_uwind100)
+    x_vwind100 = vwind100.variables['v100'][full.iloc[j,0], y['index'], z['index']]
+    inter_vwind100.append(x_vwind100)     
     print('etape :',j,'/', len(full))
     
 for i in range(len(full_list)):                                                      # Ajoute les données physiques aux df d'ouragans
     full['{}'.format(full_header[i])] = np.concatenate(full_list[i], axis = 0)
 
-full.to_csv('full_df.csv', index=False)    # On enregistre la compilation brute au cas où
 
+
+
+
+full.to_csv('full_df_2.csv', index=False)    # On enregistre la compilation brute au cas où
 
 
 # FINALISATION DU JEU DE DONNEES A ENTRAINER
@@ -154,14 +168,14 @@ full = full[full['sst'] != -32767]
 
     # Le vent calculé
 full['ws'] = np.sqrt(full['uwind']**2 + full['vwind']**2)
+full['ws100'] = np.sqrt(full['uwind100']**2 + full['vwind100']**2)
 full = full[full['name'] != 'NOT_2MED']
 
-drop_columns = ['index', 't', 'uwind', 'vwind', 'dewp']
+drop_columns = ['index', 't', 'uwind', 'vwind', 'dewp', 'uwind100', 'vwind100']
 full = full.drop(drop_columns, axis = 1)                                             # On supprime les colonnes non essentielles
 
 # ENREGISTREMENT DU CSV
 
+
 full.to_csv('hurricane_data.csv', index = False)                                                       
-
-
 
