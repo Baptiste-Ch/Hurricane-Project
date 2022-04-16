@@ -5,9 +5,9 @@ The structure of that project is decomposed into two distinct parts :
 - Creation_df.py : Thanks to IBTrACS database, hurricane historical events were compiled. 
   Their information of latitude/longitude/time were matched with ERA5 database of physical features to get a complete dataframe of hurricane records since 1979.
  
-- Detection : This folder contains some model optimizations which ended to the laste model to apply with the right hyperparameters
+- Detection.py : This folder contains some model optimizations which ended to the last model to apply with the right hyperparameters
 
-- Optimization : That script defines a function that run the modelisation for any dataframe.
+- Optimization.py : That script defines a function that run the modelisation for any dataframe.
 
 - API.py : In a second part, the most robust machine learning model was found to get a relation between physical features and hurricane occurrences. 
 In order to observe the results (beside the numerical error on the test sets), maps of different climatic conditions where built.
